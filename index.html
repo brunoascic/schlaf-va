@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schlaf VA — Tagesplan</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F6F2;
+  --surface: #FFFFFF;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.14);
+  --text: #1A1A18;
+  --text-secondary: #6B6B65;
+  --text-hint: #A0A09A;
+  --blue: #1A56DB;
+  --blue-bg: #EEF3FF;
+  --blue-text: #1A3A8A;
+  --green: #0E7C50;
+  --green-bg: #EDFAF3;
+  --green-text: #0B5C3C;
+  --amber: #B45309;
+  --amber-bg: #FFFBEB;
+  --amber-text: #7C3A0A;
+  --red: #C0392B;
+  --red-bg: #FEF2F2;
+  --red-text: #7F1D1D;
+  --purple: #5B21B6;
+  --purple-bg: #F5F3FF;
+  --dot-sleep: #7C3AED;
+  --dot-wake: #D97706;
+  --dot-test: #2563EB;
+  --dot-log: #059669;
+  --dot-sport: #DC2626;
+  --dot-neutral: #CBD5E1;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111110;
+    --surface: #1C1C1A;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #F0EFE9;
+    --text-secondary: #9A9A94;
+    --text-hint: #5A5A56;
+    --blue-bg: #1A2A4A;
+    --blue-text: #93B4F8;
+    --green-bg: #0A2E1E;
+    --green-text: #6EE7B7;
+    --amber-bg: #2A1A06;
+    --amber-text: #FBD38D;
+    --red-bg: #2A0E0E;
+    --red-text: #FCA5A5;
+    --purple-bg: #1E1040;
+    --dot-neutral: #374151;
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0;
+}
+
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 1.5rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-top {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.header-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: 'DM Mono', monospace;
+}
+
+.tab-row {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 1px;
+}
+
+.tab-row::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.tab-btn:hover { color: var(--text); background: var(--bg); }
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); background: transparent; }
+
+.main { padding: 1.5rem; max-width: 680px; margin: 0 auto; }
+
+.phase { display: none; }
+.phase.visible { display: block; }
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+}
+
+.alert-green { background: var(--green-bg); border-color: rgba(14,124,80,0.2); }
+.alert-green .alert-title { color: var(--green-text); font-size: 13px; font-weight: 600; }
+.alert-green .alert-body { color: var(--green-text); font-size: 12px; margin-top: 2px; opacity: 0.85; }
+
+.alert-amber { background: var(--amber-bg); border-color: rgba(180,83,9,0.2); }
+.alert-amber .alert-title { color: var(--amber-text); font-size: 13px; font-weight: 600; }
+.alert-amber .alert-body { color: var(--amber-text); font-size: 12px; margin-top: 2px; opacity: 0.85; }
+
+.alert-blue { background: var(--blue-bg); border-color: rgba(26,86,219,0.2); }
+.alert-blue .alert-title { color: var(--blue-text); font-size: 13px; font-weight: 600; }
+.alert-blue .alert-body { color: var(--blue-text); font-size: 12px; margin-top: 2px; opacity: 0.85; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.01em;
+}
+
+.badge-blue { background: var(--blue-bg); color: var(--blue-text); }
+.badge-green { background: var(--green-bg); color: var(--green-text); }
+.badge-amber { background: var(--amber-bg); color: var(--amber-text); }
+.badge-red { background: var(--red-bg); color: var(--red-text); }
+.badge-purple { background: var(--purple-bg); color: var(--purple); }
+
+.card-title { font-size: 14px; font-weight: 500; }
+
+.tl-row {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  align-items: stretch;
+}
+
+.tl-time {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--text-hint);
+  padding: 10px 10px 10px 1rem;
+  text-align: right;
+  line-height: 1.3;
+  padding-top: 12px;
+}
+
+.tl-right {
+  display: flex;
+  align-items: stretch;
+  border-left: 1px solid var(--border);
+}
+
+.tl-dc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.tl-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 13px;
+  flex-shrink: 0;
+}
+
+.tl-line {
+  width: 1px;
+  background: var(--border);
+  flex: 1;
+  margin-top: 3px;
+}
+
+.tl-ct { padding: 8px 1rem 8px 0; flex: 1; }
+.tl-action { font-size: 13px; font-weight: 500; line-height: 1.4; }
+.tl-note { font-size: 12px; color: var(--text-secondary); margin-top: 2px; line-height: 1.5; }
+
+.d-sleep { background: var(--dot-sleep); }
+.d-wake { background: var(--dot-wake); }
+.d-test { background: var(--dot-test); }
+.d-log { background: var(--dot-log); }
+.d-sport { background: var(--dot-sport); }
+.d-neutral { background: var(--dot-neutral); }
+
+.sec-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-hint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.sleep-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 1rem;
+}
+
+.sg-day {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 4px;
+  text-align: center;
+}
+
+.sg-name { font-size: 10px; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; font-family: 'DM Mono', monospace; }
+.sg-h { font-size: 12px; font-weight: 600; color: var(--text); }
+.sg-note { font-size: 10px; color: var(--text-hint); margin-top: 3px; line-height: 1.3; }
+
+.sg-ok { background: var(--green-bg); border-color: rgba(14,124,80,0.15); }
+.sg-ok .sg-h { color: var(--green-text); }
+.sg-mid { background: var(--amber-bg); border-color: rgba(180,83,9,0.15); }
+.sg-mid .sg-h { color: var(--amber-text); }
+
+.legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <span class="header-title">Schlaf VA — Tagesplan</span>
+    <span class="header-sub">4 Wochen · Selbstexperiment</span>
+  </div>
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="show('mo', event)">Mo</button>
+    <button class="tab-btn" onclick="show('di', event)">Di</button>
+    <button class="tab-btn" onclick="show('mi', event)">Mi</button>
+    <button class="tab-btn" onclick="show('do', event)">Do</button>
+    <button class="tab-btn" onclick="show('fr', event)">Fr</button>
+    <button class="tab-btn" onclick="show('sa', event)">Sa</button>
+    <button class="tab-btn" onclick="show('so', event)">So</button>
+    <button class="tab-btn" onclick="show('overview', event)">Übersicht</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- MONTAG -->
+<div id="mo" class="phase visible">
+  <div class="alert alert-green">
+    <div class="alert-title">Schlaf ~8h ✓</div>
+    <div class="alert-body">22:00 schlafen → 06:00 aufwachen. Fussball endet 20:30, 5 Min. nach Hause — genug Puffer.</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-blue">Montag</span>
+      <span class="card-title">Arbeit + Fussball 19:00–20:30</span>
+    </div>
+    <div class="tl-row"><div class="tl-time">06:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-wake"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aufstehen</div><div class="tl-note">Kein Snooze</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:05</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-test"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Konzentrationstest</div><div class="tl-note">Human Benchmark — vor Frühstück, vor Kaffee (~5 Min.)</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:15</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Tageseintrag</div><div class="tl-note">Daylio + Sheets: Schlafqualität, Energie, Stimmung (1–10) + Testergebnis</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:50</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aus dem Haus → Arbeit</div><div class="tl-note">Abfahrt 06:50–07:20</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">19:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-sport"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Fussballtraining</div><div class="tl-note">19:00–20:30 (1.5h)</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">20:35</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Zuhause — Duschen, Essen</div><div class="tl-note">5 Min. nach Hause</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">21:30</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Abend-Log (Woche 3–4)</div><div class="tl-note">Tagebucheintrag LZ3: was umgesetzt, was bemerkt</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">22:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-sleep"></div></div><div class="tl-ct"><div class="tl-action">Schlafen</div><div class="tl-note">Handy weg, Licht aus → 8h bis 06:00</div></div></div></div>
+  </div>
+</div>
+
+<!-- DIENSTAG -->
+<div id="di" class="phase">
+  <div class="alert alert-green">
+    <div class="alert-title">Schlaf ~9h ✓ — längste Nacht</div>
+    <div class="alert-body">Kein Gym mehr am Dienstag. Schule endet 19:30–20:00, dann direkt runterkommen, 22:00 schlafen → 07:00 aufwachen.</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-blue">Dienstag</span>
+      <span class="card-title">Schule (lang) — kein Sport</span>
+    </div>
+    <div class="tl-row"><div class="tl-time">07:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-wake"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aufstehen</div><div class="tl-note">Späterer Start wegen langem Schultag</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">07:05</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-test"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Konzentrationstest</div><div class="tl-note">Human Benchmark — identisch wie alle anderen Tage, vor Frühstück</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">07:15</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Tageseintrag</div><div class="tl-note">Daylio + Sheets — gleiche Felder wie immer</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">07:40</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aus dem Haus → Schule</div><div class="tl-note">Langer Schultag bis ~19:30–20:00</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">20:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Heimkommen — Essen, entspannen</div><div class="tl-note">Kein Sport heute — bewusst freier Abend</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">21:30</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Abend-Log (Woche 3–4)</div><div class="tl-note">Tagebucheintrag LZ3</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">22:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-sleep"></div></div><div class="tl-ct"><div class="tl-action">Schlafen → 07:00 = 9h</div><div class="tl-note">Längste Nacht der Woche</div></div></div></div>
+  </div>
+</div>
+
+<!-- MITTWOCH -->
+<div id="mi" class="phase">
+  <div class="alert alert-green">
+    <div class="alert-title">Schlaf ~8h ✓</div>
+    <div class="alert-body">Gleicher Rhythmus wie Montag. Gym endet 20:30, kurze Routine, 22:00 schlafen.</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-blue">Mittwoch</span>
+      <span class="card-title">Arbeit + Gym 19:00–20:30</span>
+    </div>
+    <div class="tl-row"><div class="tl-time">06:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-wake"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aufstehen</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:05</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-test"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Konzentrationstest</div><div class="tl-note">Human Benchmark — nüchtern, vor Kaffee</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:15</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Tageseintrag Daylio + Sheets</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:50</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aus dem Haus → Arbeit</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">19:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-sport"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Gym</div><div class="tl-note">19:00–20:30 (1.5h)</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">20:35</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Zuhause — Duschen, Essen</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">21:30</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Abend-Log (Woche 3–4)</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">22:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-sleep"></div></div><div class="tl-ct"><div class="tl-action">Schlafen → 06:00 = 8h</div></div></div></div>
+  </div>
+</div>
+
+<!-- DONNERSTAG -->
+<div id="do" class="phase">
+  <div class="alert alert-green">
+    <div class="alert-title">Schlaf ~7.75h ✓</div>
+    <div class="alert-body">Fussball 20:00–21:30, 5 Min. nach Hause = 21:35. Schlafen 22:15 → 06:00.</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-blue">Donnerstag</span>
+      <span class="card-title">Arbeit + Fussball 20:00–21:30</span>
+    </div>
+    <div class="tl-row"><div class="tl-time">06:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-wake"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aufstehen</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:05</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-test"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Konzentrationstest</div><div class="tl-note">Human Benchmark — nüchtern, vor Kaffee</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:15</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Tageseintrag Daylio + Sheets</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:50</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aus dem Haus → Arbeit</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">20:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-sport"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Fussballtraining</div><div class="tl-note">20:00–21:30 (1.5h)</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">21:35</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Zuhause — Duschen, kurz essen</div><div class="tl-note">Routine kurz halten</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">22:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Abend-Log (Woche 3–4)</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">22:15</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-sleep"></div></div><div class="tl-ct"><div class="tl-action">Schlafen → 06:00 = ~7.75h</div></div></div></div>
+  </div>
+</div>
+
+<!-- FREITAG -->
+<div id="fr" class="phase">
+  <div class="alert alert-amber">
+    <div class="alert-title">Schlaf ~7.5h ⚠ — kürzester kontrollierter Tag</div>
+    <div class="alert-body">Freier Abend, schlafen 22:30 → 06:00. Egal ob Freundin oder nicht — Schlafzeit bleibt fix.</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-amber">Freitag</span>
+      <span class="card-title">Arbeit + freier Abend</span>
+    </div>
+    <div class="tl-row"><div class="tl-time">06:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-wake"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aufstehen</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:05</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-test"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Konzentrationstest</div><div class="tl-note">Human Benchmark — nüchtern, vor Kaffee</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:15</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Tageseintrag Daylio + Sheets</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:50</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aus dem Haus → Arbeit</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">Abend</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Freier Abend</div><div class="tl-note">Kein fixes Programm — endet spätestens 22:00</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">22:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Abend-Log (Woche 3–4)</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">22:30</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-sleep"></div></div><div class="tl-ct"><div class="tl-action">Schlafen → 06:00 = ~7.5h</div></div></div></div>
+  </div>
+</div>
+
+<!-- SAMSTAG -->
+<div id="sa" class="phase">
+  <div class="alert alert-blue">
+    <div class="alert-title">Aufwachen fix 06:00 — Gym am Morgen</div>
+    <div class="alert-body">Gym ersetzt den gestrichenen Dienstag. Danach freier Tag — Schlafenszeit abends frei, aber notieren.</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-green">Samstag</span>
+      <span class="card-title">Gym (neu) + freier Tag</span>
+    </div>
+    <div class="tl-row"><div class="tl-time">06:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-wake"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aufstehen</div><div class="tl-note">Fix 06:00 — auch am Wochenende</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:05</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-test"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Konzentrationstest</div><div class="tl-note">Human Benchmark — identisch wie Werktage</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:15</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Tageseintrag Daylio + Sheets</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">Morgen</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-sport"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Gym</div><div class="tl-note">Wann es passt — ersetzt Dienstag-Gym</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">Rest</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div></div><div class="tl-ct"><div class="tl-action">Freier Tag</div><div class="tl-note">Schlafenszeit frei — notieren wann du schläfst</div></div></div></div>
+  </div>
+</div>
+
+<!-- SONNTAG -->
+<div id="so" class="phase">
+  <div class="alert alert-blue">
+    <div class="alert-title">Erholungstag — kein Sport</div>
+    <div class="alert-body">Aufwachen fix 06:00. Danach komplett freier Tag.</div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="badge badge-green">Sonntag</span>
+      <span class="card-title">Erholung — kein Sport</span>
+    </div>
+    <div class="tl-row"><div class="tl-time">06:00</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-wake"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Aufstehen</div><div class="tl-note">Fix 06:00</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:05</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-test"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Konzentrationstest</div><div class="tl-note">Human Benchmark</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">06:15</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-log"></div><div class="tl-line"></div></div><div class="tl-ct"><div class="tl-action">Tageseintrag Daylio + Sheets</div></div></div></div>
+    <div class="tl-row"><div class="tl-time">Rest</div><div class="tl-right"><div class="tl-dc"><div class="tl-dot d-neutral"></div></div><div class="tl-ct"><div class="tl-action">Freier Tag</div><div class="tl-note">Schlafenszeit frei — notieren wann du schläfst</div></div></div></div>
+  </div>
+</div>
+
+<!-- ÜBERSICHT -->
+<div id="overview" class="phase">
+  <div class="sec-label">Schlafdauer pro Nacht</div>
+  <div class="sleep-grid">
+    <div class="sg-day sg-ok"><div class="sg-name">Mo</div><div class="sg-h">~8h</div><div class="sg-note">22:00–06:00</div></div>
+    <div class="sg-day sg-ok"><div class="sg-name">Di</div><div class="sg-h">~9h</div><div class="sg-note">22:00–07:00</div></div>
+    <div class="sg-day sg-ok"><div class="sg-name">Mi</div><div class="sg-h">~8h</div><div class="sg-note">22:00–06:00</div></div>
+    <div class="sg-day sg-ok"><div class="sg-name">Do</div><div class="sg-h">~7.75h</div><div class="sg-note">22:15–06:00</div></div>
+    <div class="sg-day sg-mid"><div class="sg-name">Fr</div><div class="sg-h">~7.5h</div><div class="sg-note">22:30–06:00</div></div>
+    <div class="sg-day"><div class="sg-name">Sa</div><div class="sg-h">variiert</div><div class="sg-note">frei</div></div>
+    <div class="sg-day"><div class="sg-name">So</div><div class="sg-h">variiert</div><div class="sg-note">frei</div></div>
+  </div>
+
+  <div class="sec-label">Trainingsplan</div>
+  <div class="sleep-grid">
+    <div class="sg-day"><div class="sg-name">Mo</div><div class="sg-h" style="font-size:11px">Fussball</div><div class="sg-note">19:00–20:30</div></div>
+    <div class="sg-day"><div class="sg-name">Di</div><div class="sg-h" style="font-size:11px;color:var(--text-hint)">—</div><div class="sg-note">frei</div></div>
+    <div class="sg-day"><div class="sg-name">Mi</div><div class="sg-h" style="font-size:11px">Gym</div><div class="sg-note">19:00–20:30</div></div>
+    <div class="sg-day"><div class="sg-name">Do</div><div class="sg-h" style="font-size:11px">Fussball</div><div class="sg-note">20:00–21:30</div></div>
+    <div class="sg-day"><div class="sg-name">Fr</div><div class="sg-h" style="font-size:11px;color:var(--text-hint)">—</div><div class="sg-note">frei</div></div>
+    <div class="sg-day sg-ok"><div class="sg-name">Sa</div><div class="sg-h" style="font-size:11px">Gym</div><div class="sg-note">neu</div></div>
+    <div class="sg-day"><div class="sg-name">So</div><div class="sg-h" style="font-size:11px;color:var(--text-hint)">—</div><div class="sg-note">Erholung</div></div>
+  </div>
+
+  <div class="alert alert-blue" style="margin-top:1rem">
+    <div class="alert-title">4x Training — kein Verlust</div>
+    <div class="alert-body">Mo Fussball · Mi Gym · Do Fussball · Sa Gym. Kein einziger Tag unter 7.5h Schlaf.</div>
+  </div>
+
+  <div class="sec-label">Legende</div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--dot-wake)"></div>Aufstehen</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--dot-test)"></div>Konzentrationstest</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--dot-log)"></div>Log-Eintrag</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--dot-sport)"></div>Sport</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--dot-sleep)"></div>Schlafen</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--dot-neutral)"></div>Sonstiges</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+function show(id, e) {
+  document.querySelectorAll('.phase').forEach(el => el.classList.remove('visible'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('visible');
+  e.target.classList.add('active');
+}
+</script>
+</body>
+</html>
